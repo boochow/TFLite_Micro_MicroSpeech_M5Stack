@@ -84,7 +84,7 @@ void AudioRecordingTask(void *pvParameters) {
 
     if (bytes_read > 0) {
       sample = ADC_OFFSET - i2s_data - 2047;
-      sample = sample << 4;
+      //sample = sample << 4;
       recording_buffer[audio_idx] = sample;
       if (max_audio < sample) {
         max_audio = sample;
@@ -124,6 +124,7 @@ TfLiteStatus InitAudioRecording(tflite::ErrorReporter* error_reporter) {
   Serial.println("init audio"); delay(10);
   pinMode( BACKLIGHT, OUTPUT );
   digitalWrite( BACKLIGHT, HIGH ); // This gives the least noise
+  ledcDetachPin(25);
   InitI2S();
   xTaskCreatePinnedToCore(AudioRecordingTask, "AudioRecordingTask", 2048, NULL, 1, NULL, 1);
   // Block until we have our first audio sample
