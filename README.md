@@ -12,3 +12,5 @@ excepting `audio_provider.cc`, `command_responder.cc`, `command_responder.h` and
 [M5Stack-Avatar](https://github.com/meganetaaan/m5stack-avatar)library is used for drawing a face on the LCD.
 
 Since M5Stack's internal microphone is always picking up noise from the internal speaker, you should speak LOUDLY to your M5Stack. I'm sorry it may be annoying for people near you...
+
+Visit [my blog entry](https://blog.boochow.com/article/m5stack-tflite-micro-speech.html) for details and demonstration video. (Sorry the article is in Japanese)
