@@ -9,7 +9,7 @@ Most of the source files on this repository are derived from TensorFlow reposito
 ```make -f tensorflow/lite/micro/tools/make/Makefile TARGET=esp generate_micro_speech_esp_project```  
 excepting `audio_provider.cc`, `command_responder.cc`, `command_responder.h` and `main.cpp`.
 
-[M5Stack-Avatar](https://github.com/meganetaaan/m5stack-avatar)library is used for drawing a face on the LCD.
+[M5Stack-Avatar](https://github.com/meganetaaan/m5stack-avatar) library is used (but not included) for drawing a face on the LCD.
 
 Since M5Stack's internal microphone is always picking up noise from the internal speaker, you should speak LOUDLY to your M5Stack. I'm sorry it may be annoying for people near you...
 
