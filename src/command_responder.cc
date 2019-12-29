@@ -14,9 +14,9 @@ limitations under the License.
 ==============================================================================*/
 
 #include "command_responder.h"
-#include <M5Stack.h>
+#include <M5StickC.h>
 
-#define USE_AVATAR 1
+#define USE_AVATAR 0
 
 #if USE_AVATAR
 #include <Avatar.h>
@@ -32,6 +32,7 @@ void InitResponder() {
   avatar.init();
   avatar.setExpression(Expression::Sleepy);
 #else
+  M5.Lcd.setRotation(3);
   M5.Lcd.setTextColor(YELLOW);
   M5.Lcd.setTextSize(2);
 #endif
@@ -111,14 +112,14 @@ void DrawNo(int x, int y, int w, int h, int t, int c) {
 
 void UpdateText(const char* found_command) {
   if (strcmp(found_command, "yes") == 0) {
-    DrawYes(60, 40, 200, 160, 20, GREEN);
+    DrawYes(30, 0, 100, 80, 10, GREEN);
   } else if (strcmp(found_command, "no") == 0) {
-    DrawNo(60, 40, 200, 160, 20, RED);
+    DrawNo(30, 0, 100, 80, 10, RED);
   } else if (strcmp(found_command, "unknown") == 0) {
-    M5.Lcd.setCursor(65, 100);
+    M5.Lcd.setCursor(30, 32);
     M5.Lcd.println("UNKNOWN");
   } else if (strcmp(found_command, "silence") == 0) {
-    M5.Lcd.setCursor(65, 100);
+    M5.Lcd.setCursor(0, 32);
     M5.Lcd.println("Heard nothing");
   } else if (strcmp(found_command, "") == 0) {
     M5.Lcd.fillScreen(BLACK);
@@ -139,6 +140,7 @@ void RespondToCommand(tflite::ErrorReporter* error_reporter,
 #if USE_AVATAR
     UpdateFace(found_command);
 #else
+    M5.Lcd.fillScreen(BLACK);
     UpdateText(found_command);
 #endif
   } else {

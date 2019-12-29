@@ -1,13 +1,10 @@
 #include "audio_provider.h"
 #include "micro_features/micro_model_settings.h"
 #include <Arduino.h>
-#include <M5Stack.h>
+#include <M5StickC.h>
 #include <driver/i2s.h>
 
-#define ADC_INPUT      ADC1_CHANNEL_6 //pin 34, for M5Stack Fire
 #define PIN_MICROPHONE 34
-#define ADC_OFFSET     (ADC_INPUT * 0x1000 + 0xFFF)
-#define BACKLIGHT      32
 
 #define SAMPLING_FREQ  16000
 #define BUFFER_SIZE    512
@@ -30,7 +27,7 @@ volatile int16_t recording_buffer[BUFFER_SIZE];
 volatile int max_audio = -32768, min_audio = 32768;
 }  // namespace
 
-#define PIN_I2S_CLK 12
+#define PIN_I2S_CLK 0
 #define PIN_I2S_WS 13
 #define PIN_I2S_DIN 34
 #define PIN_I2S_DOUT 15
@@ -38,11 +35,11 @@ volatile int max_audio = -32768, min_audio = 32768;
 void InitI2S()
 {
    i2s_config_t i2s_config = {
-    .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN),
-    .sample_rate =  SAMPLING_FREQ,              // The format of the signal using ADC_BUILT_IN
+    .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_PDM),
+    .sample_rate =  SAMPLING_FREQ,
     .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT, // is fixed at 12bit, stereo, MSB
-    .channel_format = I2S_CHANNEL_FMT_ALL_LEFT,
-    .communication_format = I2S_COMM_FORMAT_I2S_MSB, 
+    .channel_format = I2S_CHANNEL_FMT_ALL_RIGHT,
+    .communication_format = I2S_COMM_FORMAT_I2S,
     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
     .dma_buf_count = 20,
     .dma_buf_len = 32,
@@ -51,26 +48,20 @@ void InitI2S()
     .fixed_mclk = 0
    };
    i2s_pin_config_t pin_config;
-   pin_config.bck_io_num = PIN_I2S_CLK;
-   pin_config.ws_io_num = PIN_I2S_WS;
+   pin_config.bck_io_num = I2S_PIN_NO_CHANGE;
+   pin_config.ws_io_num = PIN_I2S_CLK;
    pin_config.data_out_num = I2S_PIN_NO_CHANGE;
    pin_config.data_in_num = PIN_I2S_DIN;
 
-   adc1_config_channel_atten(ADC_INPUT, ADC_ATTEN_0db);
-   adc1_config_width(ADC_WIDTH_12Bit);
    i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
-   
-   i2s_set_adc_mode(ADC_UNIT_1, ADC_INPUT);
    i2s_set_pin(I2S_NUM_0, &pin_config);
    i2s_set_clk(I2S_NUM_0, SAMPLING_FREQ, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);
-   i2s_adc_enable(I2S_NUM_0);
 }
 
 void AudioRecordingTask(void *pvParameters) {
   static uint16_t audio_idx = 0; 
   size_t bytes_read;
-  uint16_t i2s_data;
-  int16_t sample;
+  int16_t i2s_data;
 
   while(1){
 
@@ -83,14 +74,12 @@ void AudioRecordingTask(void *pvParameters) {
     i2s_read(I2S_NUM_0, &i2s_data, 2, &bytes_read, portMAX_DELAY );
 
     if (bytes_read > 0) {
-      sample = ADC_OFFSET - i2s_data - 2047;
-      //sample = sample << 4;
-      recording_buffer[audio_idx] = sample;
-      if (max_audio < sample) {
-        max_audio = sample;
+      recording_buffer[audio_idx] = i2s_data;
+      if (max_audio < i2s_data) {
+        max_audio = i2s_data;
       }
       //max_audio = max(max_audio, sample);
-      min_audio = min(min_audio, sample);
+      min_audio = min(min_audio, i2s_data);
       audio_idx++;
     }
   }
@@ -122,9 +111,6 @@ TfLiteStatus InitAudioRecording(tflite::ErrorReporter* error_reporter) {
   Serial.begin(115200);
   
   Serial.println("init audio"); delay(10);
-  pinMode( BACKLIGHT, OUTPUT );
-  digitalWrite( BACKLIGHT, HIGH ); // This gives the least noise
-  ledcDetachPin(25);
   InitI2S();
   xTaskCreatePinnedToCore(AudioRecordingTask, "AudioRecordingTask", 2048, NULL, 1, NULL, 1);
   // Block until we have our first audio sample
