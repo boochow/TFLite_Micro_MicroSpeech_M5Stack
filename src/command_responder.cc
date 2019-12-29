@@ -27,34 +27,41 @@ void InitResponder() {
   avatar.setExpression(Expression::Sleepy);
 }
 
+void UpdateFace(const char* found_command) {
+  Expression exp = Expression::Sleepy;
+
+  if (strcmp(found_command, "yes") == 0) {
+    exp = Expression::Happy;
+    avatar.setSpeechText("Yes!");
+  } else if (strcmp(found_command, "no") == 0) {
+    exp = Expression::Sad;
+    avatar.setSpeechText("No!");
+  } else if (strcmp(found_command, "unknown") == 0) {
+    exp = Expression::Doubt;
+    avatar.setSpeechText("?");
+  } else if (strcmp(found_command, "silence") == 0) {
+    exp = Expression::Sleepy;
+    avatar.setSpeechText("zzz...");
+  } else if (strcmp(found_command, "") == 0) {
+    exp = Expression::Neutral;
+    avatar.setSpeechText("");
+  }
+  avatar.setExpression(exp);
+}
+
 void RespondToCommand(tflite::ErrorReporter* error_reporter,
                       int32_t current_time, const char* found_command,
                       uint8_t score, bool is_new_command) {
   static int32_t last_timestamp = 0;
-  if (is_new_command) {
-    Expression exp = Expression::Sleepy;
 
+  if (is_new_command) { 
     error_reporter->Report("Heard %s (%d) @%dms", found_command, score,
                            current_time);
-    if (strcmp(found_command, "yes") == 0) {
-      exp = Expression::Happy;
-      avatar.setSpeechText("Yes!");
-    } else if (strcmp(found_command, "no") == 0) {
-      exp = Expression::Sad;
-      avatar.setSpeechText("No!");
-    } else if (strcmp(found_command, "unknown") == 0) {
-      exp = Expression::Doubt;
-      avatar.setSpeechText("?");
-    } else if (strcmp(found_command, "silence") == 0) {
-      exp = Expression::Sleepy;
-      avatar.setSpeechText("zzz...");
-    }
-    avatar.setExpression(exp);
     last_timestamp = current_time;
+    UpdateFace(found_command);
   } else {
     if ((current_time - last_timestamp) > 2000) {
-      avatar.setSpeechText("");
-      avatar.setExpression(Expression::Neutral);
+      UpdateFace("");
     }
   }
 }
