@@ -17,6 +17,7 @@ limitations under the License.
 #include <M5StickC.h>
 
 #define USE_AVATAR 0
+#define USE_GRAPHICS 0
 
 #if USE_AVATAR
 #include <Avatar.h>
@@ -63,6 +64,7 @@ void UpdateFace(const char* found_command) {
 
 #else
 
+#if USE_GRAPHICS
 void DrawParallelogram(int sx, int sy, int ex, int ey, int t, int c) {
 //      ___ex,ey
 //     /  /
@@ -125,7 +127,24 @@ void UpdateText(const char* found_command) {
     M5.Lcd.fillScreen(BLACK);
   }
 }
+#else
 
+void UpdateText(const char* found_command) {
+  if (strcmp(found_command, "unknown") == 0) {
+    M5.Lcd.setCursor(30, 32);
+    M5.Lcd.println("UNKNOWN");
+  } else if (strcmp(found_command, "silence") == 0) {
+    M5.Lcd.setCursor(0, 32);
+    M5.Lcd.println("Heard nothing");
+  } else if (strcmp(found_command, "") == 0) {
+    M5.Lcd.fillScreen(BLACK);
+  } else {
+    M5.Lcd.setCursor(36, 32);
+    M5.Lcd.println(found_command);
+  }
+}
+
+#endif
 #endif
 
 void RespondToCommand(tflite::ErrorReporter* error_reporter,
